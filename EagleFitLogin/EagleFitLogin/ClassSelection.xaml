@@ -1,0 +1,11 @@
+﻿<Window x:Class="EagleFitLogin.ClassSelection"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ClassSelection" Height="352.239" Width="461.194" Closing="Window_Closing_1">
+    <Grid>
+        <Label x:Name="lbl_whichClass" Content="Please Select A Class" HorizontalAlignment="Left" Margin="35,27,0,0" VerticalAlignment="Top" Width="392" Height="77" FontSize="36" FontFamily="MS Reference Sans Serif"/>
+        <Button x:Name="btn_fastFitness" Content="Fast Fitness" HorizontalAlignment="Left" VerticalAlignment="Top" Width="208" Margin="122,104,0,0" Height="73" FontSize="24" FontFamily="Microsoft Sans Serif" Click="btn_fastFitness_Click"/>
+        <Button x:Name="btn_groupExercise" Content="Group Exercise" HorizontalAlignment="Left" Margin="122,209,0,0" VerticalAlignment="Top" Width="208" Height="73" FontFamily="Microsoft Sans Serif" FontSize="24" Click="btn_groupExercise_Click"/>
+
+    </Grid>
+</Window>

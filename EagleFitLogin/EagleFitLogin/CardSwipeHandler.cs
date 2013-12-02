@@ -39,7 +39,7 @@ using System.Windows.Input;
                 }
                 else if (input.Length == _lengthOfEagleID)
                 {
-                    MessageBox.Show("Entered: " + input);
+                    //MessageBox.Show("Entered: " + input);
                     return input;
                 }
             }

@@ -19,12 +19,12 @@ namespace EagleFitLogin
         private const int SECOND = 1000;
         private const int MINUTE = 60000;
         private Timer clock = new Timer();
-        private Timer readyTimeout = new Timer();
-        private Timer memberIdTimer = new Timer();
-        private Timer infoTimeout = new Timer();
-        private Timer archiveTrigger = new Timer();
+        //private Timer readyTimeout = new Timer();
+        //private Timer memberIdTimer = new Timer();
+        //private Timer infoTimeout = new Timer();
+        //private Timer archiveTrigger = new Timer();
         
-        private DBHandler data = new DBHandler();
+        private DBHandler data;
         private CardSwipeHandler card;
         private LoginLogoutHandler logging;
         private DatabaseSwitcher switcher;
@@ -41,12 +41,13 @@ namespace EagleFitLogin
         bool isCredit = false;
         bool isCancel = true;
         bool blink = false;
-        bool isArchiving = true;
+        bool isArchiving = false;
         string memberID = "";
         private string readyToSwipe = "Ready To Swipe Card";
-        private string idleMessege = "System Is Idle";
+        private string idleMessage = "System Is Idle";
         private string memberName;
         private DbList dbData;
+        bool isGroupEx;
         
 
         public MainWindow()
@@ -57,16 +58,18 @@ namespace EagleFitLogin
             switch (dialogResult)
             {
                 case true:
-                    MessageBox.Show("Fast Fitness Selected!");
+                    //MessageBox.Show("Fast Fitness Selected!");
+                    isGroupEx = false;
                     break;
                 case false:
-                    MessageBox.Show("Group Exercise Selected!");
+                    //MessageBox.Show("Group Exercise Selected!");
+                    isGroupEx = true;
                     break;
             }
-            
+            data = new DBHandler();
             logging = new LoginLogoutHandler(data);
             switcher = new DatabaseSwitcher(data, ".myMemberSerial");
-            memberName = idleMessege;
+            memberName = idleMessage;
             double width = SystemParameters.PrimaryScreenWidth;
             double height = SystemParameters.PrimaryScreenHeight;
             
@@ -92,23 +95,11 @@ namespace EagleFitLogin
             dbData = switcher.openDatabaseData();
             switcher.openDatabase(1, "localhost", "blah");
 
-            StartArchiving();
+            
         }
 
 
-        private void StartArchiving()
-        {
-            if (switcher.isDatabaseConnected())
-            {
-                //MessageBox.Show("were in");
-                performArchiving();
-            }
-            else
-            {
-                //MessageBox.Show("were not in");
-            }
-        }
-
+        
 
         private void Timer_Click(object sender, EventArgs e)
         {
@@ -127,7 +118,7 @@ namespace EagleFitLogin
                 if (inputMemberID != string.Empty)
                 {
                     txtBx_MemberID.Text = inputMemberID.ToString();
-                    //PerformLogging(inputMemberID);
+                    PerformLogging(inputMemberID);
                 }
                 else
                 {
@@ -161,7 +152,7 @@ namespace EagleFitLogin
             if (inputMemberID != string.Empty)
             {
                 txtBx_MemberID.Text = inputMemberID.ToString();
-                //PerformLogging(inputMemberID);
+                PerformLogging(inputMemberID);
             }
             else
             {
@@ -169,16 +160,6 @@ namespace EagleFitLogin
             }
         }
 
-
-        private void performArchiving()
-        {
-            if (isArchiving)
-            {
-                logging.performArchive();
-                isArchiving = false;
-                //Invalidate(true);
-            }
-        }
 
 
         public void resetState()
@@ -190,32 +171,20 @@ namespace EagleFitLogin
             isCredit = false;
             isCancel = true;
             blink = false;
+            data = new DBHandler();
+            logging = new LoginLogoutHandler(data);
+            card = new CardSwipeHandler();
         }
 
 
         private void PerformLogging(string memberID)
         {
-            if (!isArchiving)
-            {
-                MessageBox.Show("1");
-                resetState();
-
-                //****delay for bug fix*******                
-                if (memberIdTimer.Enabled)
-                {
-                    isTimedOut_Ready = false;
-                    isCancel = false;
-                    delay = true;
-                    //Invalidate(true);
-                    clearInfo();
-                    return;
-                }
-                //***************************
-
+            
+                
                 int status;
                 if (logging.getDataReady(memberID))
                 {
-                    MessageBox.Show("2");
+                    //MessageBox.Show("2");
                     memberName = logging.memberName;
                     isCancel = false;
                     if (logging.isLoggedIn(memberID))
@@ -225,44 +194,44 @@ namespace EagleFitLogin
                         isCancel = true;// for display prior
                         fillMemberData(memberID);
                         isCancel = false;// ahh all better
-                        if (logging.isCredit())
+                        if (true)
                         {
                             status = logging.isWarnToContinue();// once had params
-                            //handleCancelLogin(status);
+                            handleCancelLogin(status);
                         }
                     }
                     if (!isCancel)
                     {
-                        if (logging.isCredit())
+                        if (isGroupEx)//logging.isCredit())
                         {
-                            isCredit = true;
+                            //isGroupEx = true;
                             if (logging.isLoggedIn(memberID))
                             {
-                                logging.logoutMember(memberID, logging.thisVisitsValue);//getVisitValue(memberID));
+                                logging.logoutGroupExMember(memberID, logging.thisVisitsValue);//getVisitValue(memberID));
                                 isLogout = true;
                             }
                             else
                             {
-                                logging.loginMember(memberID);
+                                logging.loginGroupExMember(memberID);
                                 isLogout = false;
                             }
                         }
                         else
                         {
-                            isCredit = false;
+                            //isGroupEx = false;
                             if (logging.isLoggedIn(memberID))
                             {
-                                logging.logoutNonCreditMember(memberID);
+                                logging.logoutFastFitnessMember(memberID, logging.thisVisitsValue);
                                 isLogout = true;
                             }
                             else
                             {
-                                logging.loginNonCreditMember(memberID);
+                                logging.loginFastFitnessMember(memberID);
                                 isLogout = false;
                             }
                         }
                     }
-                }
+                
                 else
                 {
                     isFailure = true;
@@ -280,6 +249,9 @@ namespace EagleFitLogin
                 }
                 prepPaintTimers();
             }// end is archive
+                
+                //clearInfo();
+                resetState();
         }
 
 
@@ -306,114 +278,21 @@ namespace EagleFitLogin
                 isCancel = false;
             }
         }
-         
-        /*
-        void panel1_Paint(object sender, PaintEventArgs e)
-        {
-            int w = ((Panel)sender).Width;
-            int h = ((Panel)sender).Height;
-            //Point p = ((Panel)sender).Location;
-            Graphics g = e.Graphics;
-            SolidBrush solidBrush = new SolidBrush(Color.Lime);
-
-            if ((!isTimedOut_Ready && !isCancel) || isArchiving)
-            {
-                if (isFailure || isArchiving || delay)
-                {
-                    solidBrush.Color = Color.Red;
-                    g.FillRectangle(solidBrush, 0, 0, w, h);
-                    solidBrush.Color = Color.Black;
-                    if (isArchiving)
-                    {
-                        g.DrawString("Archiving", new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                        g.DrawString("Please Wait", new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-                    }
-                    else if (isFailure)
-                    {
-                        g.DrawString("No Such Member", new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                        g.DrawString("Login Unsuccessful", new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-                    }
-                    else
-                    {
-                        g.DrawString("System Is Busy", new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                        g.DrawString("Please re-swipe card", new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-                    }
-                    isFailure = false;
-                    delay = false;
-
-                }
-                else
-                {
-                    g.FillRectangle(solidBrush, 0, 0, w, h);
-                    solidBrush.Color = Color.Black;
-                    g.DrawString(memberName, new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                    String memberStatus = "";
-                    if (isCredit)
-                    {
-                        memberStatus += "Credit ";
-                    }
-                    else
-                    {
-                        memberStatus += "Non-Credit ";
-                    }
-
-                    if (isLogout)
-                    {
-                        memberStatus += "Member Logout Successful";
-                    }
-                    else
-                    {
-                        memberStatus += "Member Login Successful";
-                    }
-                    g.DrawString(memberStatus, new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-
-                }
-            }
-            else
-            {
-                solidBrush.Color = Color.Yellow;
-                g.FillRectangle(solidBrush, 0, 0, w, h);
-                solidBrush.Color = Color.Black;
-                if (isTimedOut_Info)
-                {
-                    g.DrawString(idleMessege, new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                    g.DrawString("Ready For Next Scan", new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-                }
-                else
-                {
-                    g.DrawString(memberName, new Font(FontFamily.GenericSerif, 50), solidBrush, 0, 0);
-                    g.DrawString("Ready For Next Scan", new Font(FontFamily.GenericSerif, 30), solidBrush, 0, 90);
-                }
-            }
-        }
-        */
-
+      
 
         private void prepPaintTimers()
         {
             isTimedOut_Ready = false;
             isTimedOut_Info = false;
-            readyTimeout.Stop();
-            infoTimeout.Stop();
-            readyTimeout.Start();
-            infoTimeout.Start();
-            memberIdTimer.Stop();
-            memberIdTimer.Start();
+            //readyTimeout.Stop();
+            //infoTimeout.Stop();
+            //readyTimeout.Start();
+            //infoTimeout.Start();
+            //memberIdTimer.Stop();
+            //memberIdTimer.Start();
             //this.Invalidate(true);
         }
-        /*
-        private void textBox9_TextChanged(object sender, EventArgs e)
-        {
-            card.interceptAndFocus(sender, textBox1);
-        }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-            card.interceptAndFocus(sender, textBox1);
-        }
-        */
-
-
+       
         private void clearInfo()
         {
             txtblk_TimeInValue.Text = "";
@@ -421,7 +300,7 @@ namespace EagleFitLogin
             txtblk_WorkoutLengthValue.Text = "";
             txtblk_TotalVisitsValue.Text = "";
             txtblk_MemberName.Text = readyToSwipe;
-            txtblk_MemberID.Text = idleMessege;
+            txtblk_MemberID.Text = idleMessage;
             txtblk_MemberResult.Text = "";
         }
 
@@ -435,7 +314,10 @@ namespace EagleFitLogin
                 txtblk_TimeInValue.Text = logging.loginTime.ToString("hh:mm:ss tt");
                 txtblk_TimeOutValue.Text = "";
                 txtblk_WorkoutLengthValue.Text = logging.workoutLength.ToString() + " minutes";
-                txtblk_TotalVisits.Text = logging.visits.ToString();
+                txtblk_MemberName.Text = "" + logging.memberName;
+                txtblk_MemberID.Text = "" + memberID;
+                txtblk_MemberResult.Text = "Logout Canceled";
+                txtblk_TotalVisitsValue.Text = logging.visits.ToString();
 
             }
             else if (isLogout)
@@ -443,28 +325,22 @@ namespace EagleFitLogin
                 txtblk_TimeInValue.Text = logging.loginTime.ToString("hh:mm:ss tt");
                 txtblk_TimeOutValue.Text = DateTime.Now.ToString("hh:mm:ss tt");
                 txtblk_WorkoutLengthValue.Text = logging.workoutLength.ToString() + " minutes";
-                if (logging.isCredit())
-                {
-                    txtblk_TotalVisits.Text = "" + (logging.visits + logging.thisVisitsValue);
-                }
-                else
-                {
-                    txtblk_TotalVisits.Text = logging.visits.ToString();
-                }
+                txtblk_MemberName.Text = "" + logging.memberName;
+                txtblk_MemberID.Text = "" + memberID;
+                txtblk_MemberResult.Text = "Logout Successful";
+                txtblk_TotalVisitsValue.Text = "" + (logging.visits + logging.thisVisitsValue);
+                
             }
             else
             {
                 txtblk_TimeInValue.Text = DateTime.Now.ToString("hh:mm:ss tt");
                 txtblk_TimeOutValue.Text = "";
                 txtblk_WorkoutLengthValue.Text = "";
-                if (!logging.isCredit())
-                {
-                    txtblk_TotalVisits.Text = "" + (logging.visits + logging.thisVisitsValue);
-                }
-                else
-                {
-                    txtblk_TotalVisits.Text = logging.visits.ToString();
-                }
+                txtblk_MemberName.Text = "" + logging.memberName;
+                txtblk_MemberID.Text = "" + memberID;
+                txtblk_MemberResult.Text = "Login Successful";
+                txtblk_TotalVisitsValue.Text = "" + (logging.visits + logging.thisVisitsValue);
+                
             }
             lbox_AdditionalActivity.DataContext = logging.activities;
         }

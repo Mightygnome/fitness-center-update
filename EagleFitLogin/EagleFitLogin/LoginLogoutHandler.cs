@@ -14,7 +14,8 @@ class LoginLogoutHandler
     private String memberFirstName;
     private String memberLastName;
     private String memberCategory;
-    private int memberVisits;// members total visits
+    private int memberFastFitnessVisits;// members total visits
+    private int memberGroupExVisits;
     private int valueEarnedThisVisit;// visits earned from this visit
     private DateTime memberExpiration = DateTime.MinValue;
 
@@ -63,7 +64,7 @@ class LoginLogoutHandler
     {
         get
         {
-            return memberVisits;
+            return memberFastFitnessVisits;
         }
     }
 
@@ -137,9 +138,9 @@ class LoginLogoutHandler
             {
                 memberFirstName = reader.GetString(0);
                 memberLastName = reader.GetString(1);
-                memberCategory = reader.GetString(2);
-                memberVisits = reader.GetInt32(3);
-                memberExpiration = reader.GetDateTime(4);
+                memberFastFitnessVisits = reader.GetInt32(2);
+                memberGroupExVisits = reader.GetInt32(3);
+                //memberExpiration = reader.GetDateTime(4);
             }
             reader.Close();
         }
@@ -164,7 +165,7 @@ class LoginLogoutHandler
         try
         {
             visitLoginDate = data.getLatestTimeIn(memberID);
-            visitVisitValue = data.getLatestVisitValue(memberID);
+            visitVisitValue = 60;// data.getLatestVisitValue(memberID);
             visitLogoutDate = data.getLatestTimeOut(memberID);
         }
         catch (Exception ex)
@@ -174,35 +175,7 @@ class LoginLogoutHandler
         return IsPass;
     }
 
-    /*
-    * Author: Joshua Montgomery
-    * Method Name: getActivities
-    * Parameters: String
-    * Output: bool
-    * Exception: Exception
-    * Description:  gets descriptions, dates assigned, and values
-    */
-    private bool getActivities(String memberID)
-    {
-        bool isPass = true;
-        DataTable dt = new DataTable();
-        dt = data.getMemberActivities(memberID);
-        DataTableReader reader = new DataTableReader(dt);
-        try
-        {
-            while (reader.Read())
-            {
-                aditionalActivities += reader.GetString(0) + " - ";
-                aditionalActivities += reader.GetDateTime(1).ToShortDateString() + " - ";
-                aditionalActivities += reader.GetInt16(2) + "\r\n";
-            }
-        }
-        catch (Exception ex)
-        {
-            isPass = false;
-        }
-        return isPass;
-    }
+   
 
     /*
     * Author: Joshua Montgomery
@@ -293,7 +266,6 @@ class LoginLogoutHandler
         if (getMemberData(memberID))
         {
             getVisitData(memberID);
-            getActivities(memberID);
             getZeroVisits(memberID);
             this.totalWorkoutLength = getWorkoutDuration();
             valueEarnedThisVisit = getVisitValue(memberID);
@@ -310,9 +282,9 @@ class LoginLogoutHandler
    * Exception: none
    * Description:  logs out member
    */
-    public void logoutMember(String memberID, int visitValue)
+    public void logoutGroupExMember(String memberID, int visitValue)
     {
-        data.logoutMember(memberID, visitValue);
+        data.groupExLogout(memberID, visitValue);
     }
 
     /*
@@ -323,9 +295,9 @@ class LoginLogoutHandler
   * Exception: none
   * Description:  logs out member
   */
-    public void logoutNonCreditMember(String memberID)
+    public void logoutFastFitnessMember(String memberID, int visitValue)
     {
-        data.nonCreditLogout(memberID);
+        data.fastFitnessLogout(memberID, visitValue);
     }
 
     /*
@@ -336,9 +308,9 @@ class LoginLogoutHandler
   * Exception: none
   * Description:  logs in member
   */
-    public void loginMember(String memberID)
+    public void loginGroupExMember(String memberID)
     {
-        data.loginMember(memberID);
+        data.groupExLogin(memberID);
     }
 
 
@@ -350,9 +322,9 @@ class LoginLogoutHandler
 * Exception: none
 * Description:  logs in member
 */
-    public void loginNonCreditMember(String memberID)
+    public void loginFastFitnessMember(String memberID)
     {
-        data.nonCreditLogin(memberID);
+        data.fastFitnessLogin(memberID);
     }
 
 
@@ -366,6 +338,8 @@ class LoginLogoutHandler
     */
     public int getWorkoutDuration()
     {
+        if (logoutTime != DateTime.MinValue || loginTime == DateTime.MinValue)
+            return 0;
         int minutes = ((TimeSpan)(DateTime.Now - loginTime)).Minutes;
         int hours = ((TimeSpan)(DateTime.Now - loginTime)).Hours;
         for (int x = 0; x < hours; x++)
@@ -385,18 +359,18 @@ class LoginLogoutHandler
    */
     public int getVisitValue(String memberID)
     {
-        if (!isCredit()) return 1;
+        
         int todaysEarnedVisits = data.getTodaysVisitCount(memberID);
 
         int earnedVisits = 0;
-        int maxVisits = data.getMaxVisitsPerDay();
+        int maxVisits = 2;
 
         if (todaysEarnedVisits >= maxVisits) return 0;
         maxVisits -= todaysEarnedVisits;
 
-        int visit = data.getRequiredMinutesPerVisit();
+        int minutesPerVisit = 1;
 
-        earnedVisits = totalWorkoutLength / visit;
+        earnedVisits = totalWorkoutLength / minutesPerVisit;
 
         if (earnedVisits > maxVisits)
         {
@@ -417,8 +391,8 @@ class LoginLogoutHandler
     */
     public int isWarnToContinue()// used to prompt user if they want to continue
     {
-        int maxVisits = data.getMaxVisitsPerDay();
-        int visit = data.getRequiredMinutesPerVisit();
+        int maxVisits = 2;
+        int visit = 60;
 
         if ((totalWorkoutLength < visit))
         {
@@ -438,39 +412,7 @@ class LoginLogoutHandler
         return 2;
     }
 
-    /*
-   * Author: Joshua Montgomery
-   * Method Name: performArchive
-   * Parameters: none
-   * Output: void
-   * Exception: Exception
-   * Description:  will archive all expired members
-   */
-    public void performArchive()
-    {
-        DateTime expireDate = DateTime.MinValue;
-        String memberID = "";
-        DataTable id = new DataTable();
-
-        id = data.getAllCurMemberId();
-        DataTableReader reader = id.CreateDataReader();
-        try
-        {
-            while (reader.Read())
-            {
-                memberID = reader.GetString(0);
-                expireDate = reader.GetDateTime(6);
-                if (expireDate < DateTime.Today)
-                {
-                    data.archiveMember(memberID);
-                }
-            }
-            reader.Close();
-        }
-        catch (Exception ex)
-        {
-        }
-    }
+   
 
     /*
     * Author: Joshua Montgomery
@@ -485,7 +427,8 @@ class LoginLogoutHandler
         memberFirstName = "";
         memberLastName = "";
         memberCategory = "";
-        memberVisits = 0;
+        memberFastFitnessVisits = 0;
+        memberGroupExVisits = 0;
         memberExpiration = DateTime.MinValue;
         visitLoginDate = DateTime.MinValue;
         visitLogoutDate = DateTime.MinValue;

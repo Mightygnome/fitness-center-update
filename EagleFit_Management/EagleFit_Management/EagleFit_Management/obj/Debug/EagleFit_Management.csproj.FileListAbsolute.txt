@@ -69,3 +69,6 @@ C:\Users\Sarah\Documents\GitHub\Fitness-center-update-2013\EagleFit_Management\E
 C:\Users\Sarah\Documents\GitHub\Fitness-center-update-2013\EagleFit_Management\EagleFit_Management\EagleFit_Management\bin\Debug\EagleFit_Management.exe
 C:\Users\Sarah\Documents\GitHub\Fitness-center-update-2013\EagleFit_Management\EagleFit_Management\EagleFit_Management\bin\Debug\EagleFit_Management.pdb
 C:\Users\Sarah\Documents\GitHub\Fitness-center-update-2013\EagleFit_Management\EagleFit_Management\EagleFit_Management\bin\Debug\MySql.Data.dll
+C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFit_Management\EagleFit_Management\EagleFit_Management\bin\Debug\EagleFit_Management.exe.config
+C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFit_Management\EagleFit_Management\EagleFit_Management\obj\Debug\EagleFit_Management.exe
+C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFit_Management\EagleFit_Management\EagleFit_Management\obj\Debug\EagleFit_Management.pdb

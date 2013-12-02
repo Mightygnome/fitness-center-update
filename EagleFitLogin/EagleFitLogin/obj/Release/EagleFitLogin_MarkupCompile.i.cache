@@ -4,15 +4,15 @@
 winexe
 C#
 .cs
-C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFitLogin\EagleFitLogin\obj\Debug\
+C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFitLogin\EagleFitLogin\obj\Release\
 EagleFitLogin
 none
 false
-DEBUG;TRACE
+TRACE
 C:\Users\Jeremy\Documents\GitHub\fitness-center-update\EagleFitLogin\EagleFitLogin\App.xaml
 4878220025
 
-12-4925732
+161883626120
 141035717597
 ClassSelection.xaml;DatabaseSettings.xaml;InsufficientTime.xaml;MainWindow.xaml;
 
